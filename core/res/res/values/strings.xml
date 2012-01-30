@@ -3652,8 +3652,7 @@
     <string name="weather_tap_to_refresh">Tap to refresh</string>
     <string name="weather_refreshing">Refreshing</string>
 
-
-    <!-- Reboot -->
+	<!-- Reboot -->
     <string name="reboot">Reboot</string>
 
     <!-- Reboot recovery option -->
@@ -3667,4 +3666,6 @@
 
     <!-- Rebooting message -->
     <string name="reboot_progress">Your device is rebooting</string>
+
+
 </resources>
