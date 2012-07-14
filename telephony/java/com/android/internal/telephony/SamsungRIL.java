@@ -19,6 +19,8 @@ package com.android.internal.telephony;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.lang.Runtime;
+import java.io.IOException;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -358,7 +360,7 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         case RIL_UNSOL_GPS_NOTI: ret = responseVoid(p); break; // Ignored in TW RIL.
         case RIL_UNSOL_SAMSUNG_UNKNOWN_MAGIC_REQUEST: ret = responseVoid(p); break;
         case RIL_UNSOL_SAMSUNG_UNKNOWN_MAGIC_REQUEST_2: ret = responseVoid(p); break;
-        case RIL_UNSOL_AM: ret = responseVoid(p); break;
+        case RIL_UNSOL_AM: ret = responseString(p); break;
 
         default:
             // Rewind the Parcel
