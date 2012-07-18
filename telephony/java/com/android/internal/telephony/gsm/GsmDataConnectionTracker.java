@@ -491,6 +491,12 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
             if (DBG) log("enableApnType: return APN_ALREADY_ACTIVE");
             return Phone.APN_ALREADY_ACTIVE;
         }
+        if (mPhone.mCM.needsOldRilFeature("singlepdp") && !Phone.APN_TYPE_DEFAULT.equals(apnType)) {
+            ApnContext defContext = mApnContexts.get(Phone.APN_TYPE_DEFAULT);
+            if (defContext.isEnabled()) {
+                setEnabled(apnTypeToId(Phone.APN_TYPE_DEFAULT), false);
+            }
+        }
         setEnabled(apnTypeToId(apnType), true);
         if (DBG) {
             log("enableApnType: new apn request for type " + apnType +
@@ -525,6 +531,9 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
 
         if (apnContext != null) {
             setEnabled(apnTypeToId(type), false);
+            if (mPhone.mCM.needsOldRilFeature("singlepdp") && !Phone.APN_TYPE_DEFAULT.equals(type)) {
+                setEnabled(apnTypeToId(Phone.APN_TYPE_DEFAULT), true);
+            }
             if (apnContext.getState() != State.IDLE && apnContext.getState() != State.FAILED) {
                 if (DBG) log("diableApnType: return APN_REQUEST_STARTED");
                 return Phone.APN_REQUEST_STARTED;

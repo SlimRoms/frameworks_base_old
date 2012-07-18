@@ -374,6 +374,13 @@ class MountService extends IMountService.Stub
                 case H_UNMOUNT_PM_UPDATE: {
                     if (DEBUG_UNMOUNT) Slog.i(TAG, "H_UNMOUNT_PM_UPDATE");
                     UnmountCallBack ucb = (UnmountCallBack) msg.obj;
+                    if (!mUpdatingStatus && !isExternalStorage(ucb.path)) {
+                        // If PM isn't already updating, and this isn't an ASEC
+                        // mount, then go ahead and do the unmount immediately.
+                        if (DEBUG_UNMOUNT) Slog.i(TAG, " skipping PackageManager for " + ucb.path);
+                        ucb.handleFinished();
+                        break;
+                    }
                     mForceUnmounts.add(ucb);
                     if (DEBUG_UNMOUNT) Slog.i(TAG, " registered = " + mUpdatingStatus);
                     // Register only if needed.
@@ -607,7 +614,9 @@ class MountService extends IMountService.Stub
             // Update state on PackageManager, but only of real events
             if (!mEmulateExternalStorage) {
                 if (Environment.MEDIA_UNMOUNTED.equals(state)) {
-                    mPms.updateExternalMediaStatus(false, false);
+                    if (isExternalStorage(path)) {
+                        mPms.updateExternalMediaStatus(false, false);
+                    }
 
                     /*
                      * Some OBBs might have been unmounted when this volume was
@@ -617,7 +626,9 @@ class MountService extends IMountService.Stub
                     mObbActionHandler.sendMessage(mObbActionHandler.obtainMessage(
                             OBB_FLUSH_MOUNT_STATE, path));
                 } else if (Environment.MEDIA_MOUNTED.equals(state)) {
-                    mPms.updateExternalMediaStatus(true, false);
+                    if (isExternalStorage(path)) {
+                        mPms.updateExternalMediaStatus(true, false);
+                    }
                 }
             }
         }
@@ -935,7 +946,9 @@ class MountService extends IMountService.Stub
         Runtime.getRuntime().gc();
 
         // Redundant probably. But no harm in updating state again.
-        mPms.updateExternalMediaStatus(false, false);
+        if (isExternalStorage(path)) {
+            mPms.updateExternalMediaStatus(false, false);
+        }
         try {
             final Command cmd = new Command("volume", "unmount", path);
             if (removeEncryption) {
@@ -1306,6 +1319,23 @@ class MountService extends IMountService.Stub
         synchronized (mListeners) {
             return mUmsAvailable;
         }
+    }
+
+    private boolean isExternalStorage(String path) {
+        return Environment.getExternalStorageDirectory().getPath().equals(path);
+    }
+
+    private ArrayList<String> getShareableVolumes() {
+        // Sharable volumes have android:allowMassStorage="true" in storage_list.xml
+        ArrayList<String> volumesToMount = new ArrayList<String>();
+        synchronized (mVolumes) {
+            for (StorageVolume v : mVolumes) {
+                if (v.allowMassStorage()) {
+                    volumesToMount.add(v.getPath());
+                }
+            }
+        }
+        return volumesToMount;
     }
 
     public void setUsbMassStorageEnabled(boolean enable) {
