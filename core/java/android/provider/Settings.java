@@ -2402,7 +2402,6 @@ public final class Settings {
          * 2 - Normal Day
          */
         public static final String STATUSBAR_CLOCK_WEEKDAY = "statusbar_clock_weekday";
-<<<<<<< HEAD
 
 
         /**
@@ -2422,8 +2421,6 @@ public final class Settings {
          * Shows the battery icon in the notification pull down
          */
         public static final String NOTIFICATION_BATTERY_DISPLAY = "notification_battery_display";
-=======
->>>>>>> f46b8d5... SystemUI: Clock mode. Center, Right, Hidden.  AM/PM and Weekday options.  As well as PROTEKK CLOCK 99:99.  had to make a ClockStock.java file for the expanded header, as it used the same clock java.
     }
 
     /**
