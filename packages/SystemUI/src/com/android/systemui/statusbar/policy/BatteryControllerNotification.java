@@ -66,8 +66,7 @@ public class BatteryControllerNotification extends LinearLayout {
     public static final int STYLE_TEXT_ONLY = 1;
     public static final int STYLE_ICON_TEXT = 2;
     public static final int STYLE_ICON_CENTERED_TEXT = 3;
-    //public static final int STYLE_ICON_CIRCLE = 4;
-    public static final int STYLE_HIDE = 5;
+    public static final int STYLE_HIDE = 4;
 
     public BatteryControllerNotification(Context context, AttributeSet attrs) {
         super(context, attrs);
