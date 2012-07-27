@@ -2623,6 +2623,12 @@ public final class Settings {
          */
         public static final String NOTIFICATION_LIGHT_OFF = "notification_light_off";
 
+        /**
+         * What color to use for the notificaion LED
+         *
+         * @hide
+         */
+        public static final String NOTIFICATION_LIGHT_COLOR = "notification_light_color";
     }
 
     /**
