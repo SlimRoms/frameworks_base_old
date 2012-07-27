@@ -1854,7 +1854,16 @@ public class Resources {
             flushLayoutCache();
         }
     }
-    
+
+    /**
+     * @hide
+     */
+    public final void updateStringCache() {
+        synchronized (mTmpValue) {
+            mAssets.recreateStringBlocks();
+        }
+    }
+ 
     /*package*/ Drawable loadDrawable(TypedValue value, int id)
             throws NotFoundException {
 
