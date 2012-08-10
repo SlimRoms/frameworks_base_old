@@ -472,6 +472,27 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     boolean mConsumeSearchKeyUp;
     boolean mAssistKeyLongPressed;
 
+    // Used when key is pressed and performing non-default action
+    boolean mMenuDoCustomAction;
+
+    // Tracks user-customisable behavior for certain key events
+    private int mLongPressOnHomeBehavior = -1;
+    private int mPressOnMenuBehavior = -1;
+    private int mLongPressOnMenuBehavior = -1;
+    private int mPressOnAssistBehavior = -1;
+    private int mLongPressOnAssistBehavior = -1;
+    private int mPressOnAppSwitchBehavior = -1;
+    private int mLongPressOnAppSwitchBehavior = -1;
+
+    private boolean mHomePressed;
+
+    // To identify simulated keypresses, so we can perform
+    // the default action for that key
+    private boolean mIsVirtualKeypress;
+
+    // Tracks preloading of the recent apps screen
+    private boolean mRecentAppsPreloaded;
+
     // support for activating the lock screen while the screen is on
     boolean mAllowLockscreenWhenOn;
     int mLockScreenTimeout;
@@ -1822,10 +1843,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
             // If we have released the home key, and didn't do anything else
             // while it was pressed, then it is time to go home!
-            if (!down) {
+            if (!down && mHomePressed) {
                 final boolean homeWasLongPressed = mHomeLongPressed;
                 mHomePressed = false;
                 mHomeLongPressed = false;
+                mHomePressed = false;
                 if (!homeWasLongPressed) {
                     try {
                         IStatusBarService statusbar = getStatusBarService();
@@ -1884,23 +1906,17 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 }
             }
             if (down) {
-                if (!mHomePressed && mLongPressOnHomeBehavior == LONG_PRESS_HOME_RECENT_SYSTEM_UI) {
-                    try {
-                        IStatusBarService statusbar = getStatusBarService();
-                        if (statusbar != null) {
-                            statusbar.preloadRecentApps();
-                        }
-                    } catch (RemoteException e) {
-                        Slog.e(TAG, "RemoteException when preloading recent apps", e);
-                        // re-acquire status bar service next time it is needed.
-                        mStatusBarService = null;
-                    }
-                }
                 if (repeatCount == 0) {
                     mHomePressed = true;
-                } else if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
-                    if (!keyguardOn) {
-                        handleLongPressOnHome();
+                    if (!mRecentAppsPreloaded && mLongPressOnHomeBehavior == KEY_ACTION_APP_SWITCH) {
+                        preloadRecentApps();
+                    }
+                } else if (longPress) {
+                    if (!keyguardOn && mLongPressOnHomeBehavior != KEY_ACTION_NOTHING) {
+                        performHapticFeedbackLw(null, HapticFeedbackConstants.LONG_PRESS, false);
+                        performKeyAction(mLongPressOnHomeBehavior);
+                        // Eat the long-press so it won't take us home when the key is released
+                        mHomeLongPressed = true;
                     }
                 }
             }
