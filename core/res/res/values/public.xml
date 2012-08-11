@@ -3806,8 +3806,11 @@
   <java-symbol type="string" name="com.amazon.mp3.playstatechanged_album" />
   <java-symbol type="string" name="com.amazon.mp3.playstatechanged_id" />
 
+
 <!-- Always show battery status on lockscreen -->
   <java-symbol type="string" name="lockscreen_always_battery" />
   <java-symbol type="string" name="lockscreen_always_low_battery" />
 
+  <!-- WiredAccessoryObserver -->
+  <java-symbol type="array" name="config_accessoryDockNames" />
 </resources>

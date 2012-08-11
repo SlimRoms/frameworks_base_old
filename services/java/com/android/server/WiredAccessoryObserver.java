@@ -21,6 +21,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
@@ -34,6 +35,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -56,6 +58,8 @@ class WiredAccessoryObserver extends UEventObserver {
         private final String mDevName;
         private final int mState1Bits;
         private final int mState2Bits;
+        private int switchState;
+        private String mDockNames[]=Resources.getSystem().getStringArray(com.android.internal.R.array.config_accessoryDockNames);
 
         public UEventInfo(String devName, int state1Bits, int state2Bits) {
             mDevName = devName;
@@ -78,12 +82,37 @@ class WiredAccessoryObserver extends UEventObserver {
             return ((null != f) && f.exists());
         }
 
-        public int computeNewHeadsetState(int headsetState, int switchState) {
-            int preserveMask = ~(mState1Bits | mState2Bits);
-            int setBits = ((switchState == 1) ? mState1Bits :
-                          ((switchState == 2) ? mState2Bits : 0));
+        public int computeNewHeadsetState(String name, int state) {
 
-            return ((headsetState & preserveMask) | setBits);
+        if (LOG) Slog.v(TAG, "updateState name: " + name + " state " + state);
+        if (name.equals("usb_audio")) {
+            switchState = ((mHeadsetState & (BIT_HEADSET|BIT_HEADSET_NO_MIC|BIT_HDMI_AUDIO)) |
+                           ((state == 1) ? BIT_USB_HEADSET_ANLG :
+                                         ((state == 2) ? BIT_USB_HEADSET_DGTL : 0)));
+        } else if (Arrays.asList(mDockNames).contains(name)) {
+             switchState = ((mHeadsetState & (BIT_HEADSET|BIT_HEADSET_NO_MIC|BIT_HDMI_AUDIO)) |
+                           ((state == 2 || state == 1) ? BIT_USB_HEADSET_ANLG : 0));
+            // This sets the switchsate to 4 (for USB HEADSET - BIT_USB_HEADSET_ANLG)
+            // Looking at the other types, maybe the state that emitted should be a 1 and at
+            //       /devices/virtual/switch/usb_audio
+            //
+            // However the we need to deal with changes at
+            //       /devices/virtual/switch/dock
+            // for the state of 2 - means that we have a USB ANLG headset Car Dock
+            // for the state of 1 - means that we have a USB ANLG headset Desk Dock
+        } else if (name.equals("hdmi")) {
+            switchState = ((mHeadsetState & (BIT_HEADSET|BIT_HEADSET_NO_MIC|
+                                             BIT_USB_HEADSET_DGTL|BIT_USB_HEADSET_ANLG)) |
+                           ((state == 1) ? BIT_HDMI_AUDIO : 0));
+        } else if (name.equals("Headset")) {
+            switchState = ((mHeadsetState & (BIT_HDMI_AUDIO|BIT_USB_HEADSET_ANLG|
+                                             BIT_USB_HEADSET_DGTL)) |
+                                             (state & (BIT_HEADSET|BIT_HEADSET_NO_MIC)));
+        } else {
+            switchState = ((mHeadsetState & (BIT_HDMI_AUDIO|BIT_USB_HEADSET_ANLG|
+                                             BIT_USB_HEADSET_DGTL)) |
+                            ((state == 1) ? BIT_HEADSET :
+                                          ((state == 2) ? BIT_HEADSET_NO_MIC : 0)));
         }
     }
 
