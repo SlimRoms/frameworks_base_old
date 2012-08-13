@@ -3804,7 +3804,6 @@
   <java-symbol type="string" name="com.amazon.mp3.playstatechanged_artist" />
   <java-symbol type="string" name="com.amazon.mp3.playstatechanged_album" />
   <java-symbol type="string" name="com.amazon.mp3.playstatechanged_id" />
->>>>>>> b16bf22... Bluetooth: AVRCP 1.3 features changes (2/2)
 
 <!-- Always show battery status on lockscreen -->
   <java-symbol type="string" name="lockscreen_always_battery" />
