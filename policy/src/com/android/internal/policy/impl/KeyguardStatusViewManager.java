@@ -404,6 +404,8 @@ class KeyguardStatusViewManager implements OnClickListener {
             if (mWeatherImage != null) {
                 String conditionCode = w.condition_code;
                 String condition_filename = "weather_" + conditionCode;
+				//Log.d(" +++++++++++++ packageName  = "+getContext().getPackageName());
+                Log.d(TAG, "res contents are" + getContext().getPackageName());
                 int resID = res.getIdentifier(condition_filename, "drawable",
                         getContext().getPackageName());
 
