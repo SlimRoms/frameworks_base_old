@@ -70,6 +70,8 @@ import java.util.Date;
 
 import libcore.util.MutableInt;
 
+import java.lang.reflect.Field;
+
 /***
  * Manages a number of views inside of LockScreen layouts. See below for a list of widgets
  *
@@ -393,7 +395,7 @@ class KeyguardStatusViewManager implements OnClickListener {
      */
     private void setWeatherData(WeatherInfo w) {
         final ContentResolver resolver = getContext().getContentResolver();
-        final Resources res = getContext().getResources();
+        //final Resources res = getContext().getResources();
         boolean showLocation = Settings.System.getInt(resolver,
                 Settings.System.WEATHER_SHOW_LOCATION, 1) == 1;
         boolean showTimestamp = Settings.System.getInt(resolver,
@@ -401,22 +403,28 @@ class KeyguardStatusViewManager implements OnClickListener {
         boolean invertLowhigh = Settings.System.getInt(resolver,
                 Settings.System.WEATHER_INVERT_LOWHIGH, 0) == 1;
 
+
         if (mWeatherPanel != null) {
             if (mWeatherImage != null) {
                 String conditionCode = w.condition_code;
                 String condition_filename = "weather_" + conditionCode;
-                Log.d(TAG, "res contents are" + getContext().getPackageName());
-                int resID = res.getIdentifier(condition_filename, "drawable",
-                        getContext().getPackageName());
-
+                //int resID = res.getIdentifier(condition_filename, "drawable", "com.android.internal");
+			  
                 if (DEBUG)
-                    Log.d("Weather", "Condition:" + conditionCode + " ID:" + resID);
-
-                if (resID != 0) {
-                    mWeatherImage.setImageDrawable(res.getDrawable(resID));
+                    Log.d("Weather", "Condition:" + conditionCode +" condition_filename: "+ condition_filename);
+				
+				int imageID = -1;
+				try{		
+						imageID = R.drawable.class.getDeclaredField(condition_filename).getInt(null);
+				}catch(Exception e)	{
+					Log.d("Weather", "error getting icon: " + e.getMessage());
+				}
+				if (imageID != -1){
+                    mWeatherImage.setImageResource(imageID);
                 } else {
                     mWeatherImage.setImageResource(R.drawable.weather_na);
                 }
+
             }
             if (mWeatherCity != null) {
                 mWeatherCity.setText(w.city);
