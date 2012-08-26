@@ -463,7 +463,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     boolean mForceStatusBar;
     boolean mHideLockScreen;
     boolean mDismissKeyguard;
-    boolean mHomePressed;
     boolean mHomeLongPressed;
     Intent mHomeIntent;
     Intent mCarDockIntent;

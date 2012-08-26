@@ -293,96 +293,6 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
                                 ASSIST_ICON_METADATA_NAME,
                                 com.android.internal.R.drawable.ic_action_assist_generic)) {
                             Slog.w(TAG, "Couldn't grab icon from package " + component);
-                mStoredTargets = storedVal.split("\\|");
-                mIsScreenLarge = isScreenLarge();
-                ArrayList<TargetDrawable> storedDraw = new ArrayList<TargetDrawable>();
-                final Resources res = getResources();
-                final int targetInset = res.getDimensionPixelSize(com.android.internal.R.dimen.lockscreen_target_inset);
-                final PackageManager packMan = mContext.getPackageManager();
-                final boolean isLandscape = mCreationOrientation == Configuration.ORIENTATION_LANDSCAPE;
-                final Drawable blankActiveDrawable = res.getDrawable(R.drawable.ic_lockscreen_target_activated);
-                final InsetDrawable activeBack = new InsetDrawable(blankActiveDrawable, 0, 0, 0, 0);
-                // Shift targets for landscape lockscreen on phones
-                mTargetOffset = isLandscape && !mIsScreenLarge ? 2 : 0;
-                if (mTargetOffset == 2) {
-                    storedDraw.add(new TargetDrawable(res, null));
-                    storedDraw.add(new TargetDrawable(res, null));
-                }
-                // Add unlock target
-                storedDraw.add(new TargetDrawable(res, res.getDrawable(R.drawable.ic_lockscreen_unlock)));
-                for (int i = 0; i < 8 - mTargetOffset - 1; i++) {
-                    int tmpInset = targetInset;
-                    if (i < mStoredTargets.length) {
-                        String uri = mStoredTargets[i];
-                        if (!uri.equals(GlowPadView.EMPTY_TARGET)) {
-                            try {
-                                Intent in = Intent.parseUri(uri,0);
-                                Drawable front = null;
-                                Drawable back = activeBack;
-                                boolean frontBlank = false;
-                                if (in.hasExtra(GlowPadView.ICON_FILE)) {
-                                    String fSource = in.getStringExtra(GlowPadView.ICON_FILE);
-                                    if (fSource != null) {
-                                        File fPath = new File(fSource);
-                                        if (fPath.exists()) {
-                                            front = new BitmapDrawable(res, BitmapFactory.decodeFile(fSource));
-                                        }
-                                    }
-                                } else if (in.hasExtra(GlowPadView.ICON_RESOURCE)) {
-                                    String rSource = in.getStringExtra(GlowPadView.ICON_RESOURCE);
-                                    String rPackage = in.getStringExtra(GlowPadView.ICON_PACKAGE);
-                                    if (rSource != null) {
-                                        if (rPackage != null) {
-                                            try {
-                                                Context rContext = mContext.createPackageContext(rPackage, 0);
-                                                int id = rContext.getResources().getIdentifier(rSource, "drawable", rPackage);
-                                                front = rContext.getResources().getDrawable(id);
-                                                id = rContext.getResources().getIdentifier(rSource.replaceAll("_normal", "_activated"),
-                                                        "drawable", rPackage);
-                                                back = rContext.getResources().getDrawable(id);
-                                                tmpInset = 0;
-                                                frontBlank = true;
-                                            } catch (NameNotFoundException e) {
-                                                e.printStackTrace();
-                                            } catch (NotFoundException e) {
-                                                e.printStackTrace();
-                                            }
-                                        } else {
-                                            front = res.getDrawable(res.getIdentifier(rSource, "drawable", "android"));
-                                            back = res.getDrawable(res.getIdentifier(
-                                                    rSource.replaceAll("_normal", "_activated"), "drawable", "android"));
-                                            tmpInset = 0;
-                                            frontBlank = true;
-                                        }
-                                    }
-                                }
-                                if (front == null || back == null) {
-                                    ActivityInfo aInfo = in.resolveActivityInfo(packMan, PackageManager.GET_ACTIVITIES);
-                                    if (aInfo != null) {
-                                        front = aInfo.loadIcon(packMan);
-                                    } else {
-                                        front = res.getDrawable(android.R.drawable.sym_def_app_icon);
-                                    }
-                                }
-                                TargetDrawable nDrawable = new TargetDrawable(res, getLayeredDrawable(back,front, tmpInset, frontBlank));
-                                boolean isCamera = in.getComponent().getClassName().equals("com.android.camera.CameraLauncher");
-                                if (isCamera) {
-                                    nDrawable.setEnabled(!mCameraDisabled);
-                                } else {
-                                    boolean isSearch = in.getComponent().getClassName().equals("SearchActivity");
-                                    if (isSearch) {
-                                        nDrawable.setEnabled(!mSearchDisabled);
-                                    }
-                                }
-                                storedDraw.add(nDrawable);
-                            } catch (Exception e) {
-                                storedDraw.add(new TargetDrawable(res, 0));
-                            }
-                        } else {
-                            storedDraw.add(new TargetDrawable(res, 0));
-                        }
-                    } else {
-                        storedDraw.add(new TargetDrawable(res, 0));
                     }
                 }
             }
@@ -602,7 +512,10 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
         boolean disabledByAdmin = mLockPatternUtils.getDevicePolicyManager()
                 .getCameraDisabled(null);
         boolean disabledBySimState = mUpdateMonitor.isSimLocked();
-        boolean cameraPresent = mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
+        boolean cameraTargetPresent = (mUnlockWidgetMethods instanceof GlowPadViewMethods)
+                ? ((GlowPadViewMethods) mUnlockWidgetMethods)
+                        .isTargetPresent(com.android.internal.R.drawable.ic_lockscreen_camera)
+                        : false;
         boolean searchTargetPresent = (mUnlockWidgetMethods instanceof GlowPadViewMethods)
                 ? ((GlowPadViewMethods) mUnlockWidgetMethods)
                         .isTargetPresent(com.android.internal.R.drawable.ic_action_assist_generic)
@@ -614,7 +527,7 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
             Log.v(TAG, "Camera disabled by Sim State");
         }
         boolean searchActionAvailable = SearchManager.getAssistIntent(mContext) != null;
-        mCameraDisabled = disabledByAdmin || disabledBySimState || !cameraPresent;
+        mCameraDisabled = disabledByAdmin || disabledBySimState || !cameraTargetPresent;
         mSearchDisabled = disabledBySimState || !searchActionAvailable || !searchTargetPresent;
         mUnlockWidgetMethods.updateResources();
     }

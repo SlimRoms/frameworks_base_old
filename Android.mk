@@ -34,6 +34,7 @@ framework_res_source_path := APPS/framework-res_intermediates/src
 SECONDARY_FRAMEWORKS_SUBDIRS := \
         core/java/android/test \
         core/java/android/gesture \
+		core/java/android/speech/srec
 
 include $(CLEAR_VARS)
 
