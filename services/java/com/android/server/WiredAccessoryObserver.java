@@ -114,6 +114,9 @@ class WiredAccessoryObserver extends UEventObserver {
                             ((state == 1) ? BIT_HEADSET :
                                           ((state == 2) ? BIT_HEADSET_NO_MIC : 0)));
         }
+        if (LOG) Slog.v(TAG, "updateState switchState: " + switchState);
+        return switchState;
+       }
     }
 
     private static List<UEventInfo> makeObservedUEventList() {
@@ -161,7 +164,7 @@ class WiredAccessoryObserver extends UEventObserver {
 
     private static List<UEventInfo> uEventInfo = makeObservedUEventList();
 
-    private int mHeadsetState;
+    private static int mHeadsetState;
     private int mPrevHeadsetState;
     private String mHeadsetName;
 
@@ -214,7 +217,7 @@ class WiredAccessoryObserver extends UEventObserver {
         for (int i = 0; i < uEventInfo.size(); ++i) {
             UEventInfo uei = uEventInfo.get(i);
             if (devPath.equals(uei.getDevPath())) {
-                update(name, uei.computeNewHeadsetState(mHeadsetState, state));
+                update(name, uei.computeNewHeadsetState(name, state));
                 return;
             }
         }
