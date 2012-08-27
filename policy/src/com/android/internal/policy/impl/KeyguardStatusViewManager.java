@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2012 The CyanogenMod Project (Weather, Calendar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,8 +71,6 @@ import java.util.Date;
 
 import libcore.util.MutableInt;
 
-import java.lang.reflect.Field;
-
 /***
  * Manages a number of views inside of LockScreen layouts. See below for a list of widgets
  *
@@ -83,8 +82,8 @@ class KeyguardStatusViewManager implements OnClickListener {
     public static final int LOCK_ICON = 0; // R.drawable.ic_lock_idle_lock;
     public static final int ALARM_ICON = R.drawable.ic_lock_idle_alarm;
     public static final int CHARGING_ICON = 0; //R.drawable.ic_lock_idle_charging;
+    public static final int DISCHARGING_ICON = 0; // no icon used in ics+ currently
     public static final int BATTERY_LOW_ICON = 0; //R.drawable.ic_lock_idle_low_battery;
-    public static final int BATTERY_ICON = 0; //insert a R.drawable icon if you want it to show up
     private static final long INSTRUCTION_RESET_DELAY = 2000; // time until instruction text resets
 
     private static final int INSTRUCTION_TEXT = 10;
@@ -93,8 +92,6 @@ class KeyguardStatusViewManager implements OnClickListener {
     private static final int HELP_MESSAGE_TEXT = 13;
     private static final int OWNER_INFO = 14;
     private static final int BATTERY_INFO = 15;
-
-    private boolean mLockAlwaysBattery;
 
     private StatusMode mStatus;
     private String mDateFormatString;
@@ -111,6 +108,8 @@ class KeyguardStatusViewManager implements OnClickListener {
     private RelativeLayout mWeatherPanel, mWeatherTempsPanel;
     private TextView mWeatherCity, mWeatherCondition, mWeatherLowHigh, mWeatherTemp, mWeatherUpdateTime;
     private ImageView mWeatherImage;
+    private LinearLayout mCalendarPanel;
+    private TextView mCalendarEventTitle, mCalendarEventDetails;
 
     // Top-level container view for above views
     private View mContainer;
@@ -123,6 +122,9 @@ class KeyguardStatusViewManager implements OnClickListener {
 
     // last known battery level
     private int mBatteryLevel = 100;
+
+    // always show battery status?
+    private boolean mAlwaysShowBattery = false;
 
     // last known SIM state
     protected State mSimState;
@@ -238,6 +240,17 @@ class KeyguardStatusViewManager implements OnClickListener {
             mWeatherPanel.setVisibility(View.GONE);
             mWeatherPanel.setOnClickListener(this);
         }
+
+        // Calendar panel
+        mCalendarPanel = (LinearLayout) findViewById(R.id.calendar_panel);
+        mCalendarEventTitle = (TextView) findViewById(R.id.calendar_event_title);
+        mCalendarEventDetails = (TextView) findViewById(R.id.calendar_event_details);
+
+        // Hide calendar panel view until we know we need to show it.
+        if (mCalendarPanel != null) {
+            mCalendarPanel.setVisibility(View.GONE);
+        }
+
         // Hide transport control view until we know we need to show it.
         if (mTransportView != null) {
             mTransportView.setVisibility(View.GONE);
@@ -257,11 +270,12 @@ class KeyguardStatusViewManager implements OnClickListener {
         resetStatusInfo();
         refreshDate();
         updateOwnerInfo();
-		refreshWeather();
+        refreshWeather();
+        refreshCalendar();
 
         // Required to get Marquee to work.
         final View scrollableViews[] = { mCarrierView, mDateView, mStatus1View, mOwnerInfoView,
-                mAlarmStatusView, mWeatherCity, mWeatherCondition };
+                mAlarmStatusView, mCalendarEventDetails, mWeatherCity, mWeatherCondition };
         for (View v : scrollableViews) {
             if (v != null) {
                 v.setSelected(true);
@@ -395,7 +409,7 @@ class KeyguardStatusViewManager implements OnClickListener {
      */
     private void setWeatherData(WeatherInfo w) {
         final ContentResolver resolver = getContext().getContentResolver();
-        //final Resources res = getContext().getResources();
+        final Resources res = getContext().getResources();
         boolean showLocation = Settings.System.getInt(resolver,
                 Settings.System.WEATHER_SHOW_LOCATION, 1) == 1;
         boolean showTimestamp = Settings.System.getInt(resolver,
@@ -403,28 +417,21 @@ class KeyguardStatusViewManager implements OnClickListener {
         boolean invertLowhigh = Settings.System.getInt(resolver,
                 Settings.System.WEATHER_INVERT_LOWHIGH, 0) == 1;
 
-
         if (mWeatherPanel != null) {
             if (mWeatherImage != null) {
                 String conditionCode = w.condition_code;
                 String condition_filename = "weather_" + conditionCode;
-                //int resID = res.getIdentifier(condition_filename, "drawable", "com.android.internal");
-			  
+                int resID = res.getIdentifier(condition_filename, "drawable",
+                        getContext().getPackageName());
+
                 if (DEBUG)
-                    Log.d("Weather", "Condition:" + conditionCode +" condition_filename: "+ condition_filename);
-				
-				int imageID = -1;
-				try{		
-						imageID = R.drawable.class.getDeclaredField(condition_filename).getInt(null);
-				}catch(Exception e)	{
-					Log.d("Weather", "error getting icon: " + e.getMessage());
-				}
-				if (imageID != -1){
-                    mWeatherImage.setImageResource(imageID);
+                    Log.d("Weather", "Condition:" + conditionCode + " ID:" + resID);
+
+                if (resID != 0) {
+                    mWeatherImage.setImageDrawable(res.getDrawable(resID));
                 } else {
                     mWeatherImage.setImageResource(R.drawable.weather_na);
                 }
-
             }
             if (mWeatherCity != null) {
                 mWeatherCity.setText(w.city);
@@ -523,6 +530,59 @@ class KeyguardStatusViewManager implements OnClickListener {
         }
         return null;
     }
+
+    /*
+     * CyanogenMod Lock screen Calendar related functionality
+     */
+
+    private void refreshCalendar() {
+        if (mCalendarPanel != null) {
+            final ContentResolver resolver = getContext().getContentResolver();
+            String[] nextCalendar = null;
+            boolean visible = false; // Assume we are not showing the view
+
+            // Load the settings
+            boolean lockCalendar = (Settings.System.getInt(resolver,
+                    Settings.System.LOCKSCREEN_CALENDAR, 0) == 1);
+            String[] calendars = parseStoredValue(Settings.System.getString(
+                    resolver, Settings.System.LOCKSCREEN_CALENDARS));
+            boolean lockCalendarRemindersOnly = (Settings.System.getInt(resolver,
+                    Settings.System.LOCKSCREEN_CALENDAR_REMINDERS_ONLY, 0) == 1);
+            long lockCalendarLookahead = Settings.System.getLong(resolver,
+                    Settings.System.LOCKSCREEN_CALENDAR_LOOKAHEAD, 10800000);
+
+            if (lockCalendar) {
+                nextCalendar = mLockPatternUtils.getNextCalendarAlarm(lockCalendarLookahead,
+                        calendars, lockCalendarRemindersOnly);
+                if (nextCalendar[0] != null && mCalendarEventTitle != null) {
+                    mCalendarEventTitle.setText(nextCalendar[0].toString());
+                    if (nextCalendar[1] != null && mCalendarEventDetails != null) {
+                        mCalendarEventDetails.setText(nextCalendar[1]);
+                    }
+                    visible = true;
+                }
+            }
+
+           mCalendarPanel.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /**
+     * Split the MultiSelectListPreference string based on a separator of ',' and
+     * stripping off the start [ and the end ]
+     * @param val
+     * @return
+     */
+    private static String[] parseStoredValue(String val) {
+        if (val == null || val.isEmpty())
+            return null;
+        else {
+            // Strip off the start [ and the end ] before splitting
+            val = val.substring(1, val.length() -1);
+            return (val.split(","));
+        }
+    }
+
     private boolean inWidgetMode() {
         return mTransportView != null && mTransportView.getVisibility() == View.VISIBLE;
     }
@@ -623,6 +683,7 @@ class KeyguardStatusViewManager implements OnClickListener {
         mShowingBatteryInfo = mUpdateMonitor.shouldShowBatteryInfo();
         mPluggedIn = mUpdateMonitor.isDevicePluggedIn();
         mBatteryLevel = mUpdateMonitor.getBatteryLevel();
+        mAlwaysShowBattery = KeyguardUpdateMonitor.shouldAlwaysShowBatteryInfo(getContext());
         updateStatusLines(true);
     }
 
@@ -684,9 +745,7 @@ class KeyguardStatusViewManager implements OnClickListener {
         // If we have replaced the status area with a single widget, then this code
         // prioritizes what to show in that space when all transient messages are gone.
         CharSequence string = null;
-        mLockAlwaysBattery = Settings.System.getInt(getContext().getContentResolver(),
-                Settings.System.LOCKSCREEN_BATTERY, 0) == 1;
-        if (mShowingBatteryInfo || mLockAlwaysBattery) {
+        if (mShowingBatteryInfo) {
             // Battery status
             if (mPluggedIn) {
                 // Charging or charged
@@ -698,17 +757,12 @@ class KeyguardStatusViewManager implements OnClickListener {
                 icon.value = CHARGING_ICON;
             } else if (mBatteryLevel < KeyguardUpdateMonitor.LOW_BATTERY_THRESHOLD) {
                 // Battery is low
-                string = getContext().getString(R.string.lockscreen_low_battery);
+                string = getContext().getString(R.string.lockscreen_low_battery, mBatteryLevel);
                 icon.value = BATTERY_LOW_ICON;
-                if (mLockAlwaysBattery) {
-                    // Show battery at low percent
-                    string = getContext().getString(R.string.lockscreen_always_low_battery, mBatteryLevel);
-                            icon.value = BATTERY_LOW_ICON;
-                }
-            } else if (mLockAlwaysBattery) {
-                // Always show battery
-                string = getContext().getString(R.string.lockscreen_always_battery, mBatteryLevel);
-                icon.value = BATTERY_ICON;
+            } else if (mAlwaysShowBattery) {
+                // Discharging
+                string = getContext().getString(R.string.lockscreen_discharging, mBatteryLevel);
+                icon.value = DISCHARGING_ICON;
             }
         } else {
             string = mCarrierText;
@@ -718,13 +772,11 @@ class KeyguardStatusViewManager implements OnClickListener {
 
     private CharSequence getPriorityTextMessage(MutableInt icon) {
         CharSequence string = null;
-        mLockAlwaysBattery = Settings.System.getInt(getContext().getContentResolver(),
-                Settings.System.LOCKSCREEN_BATTERY, 0) == 1;
         if (!TextUtils.isEmpty(mInstructionText)) {
             // Instructions only
             string = mInstructionText;
             icon.value = LOCK_ICON;
-        } else if (mShowingBatteryInfo || mLockAlwaysBattery) {
+        } else if (mShowingBatteryInfo) {
             // Battery status
             if (mPluggedIn) {
                 // Charging or charged
@@ -736,17 +788,12 @@ class KeyguardStatusViewManager implements OnClickListener {
                 icon.value = CHARGING_ICON;
             } else if (mBatteryLevel < KeyguardUpdateMonitor.LOW_BATTERY_THRESHOLD) {
                 // Battery is low
-                string = getContext().getString(R.string.lockscreen_low_battery);
+                string = getContext().getString(R.string.lockscreen_low_battery, mBatteryLevel);
                 icon.value = BATTERY_LOW_ICON;
-                if (mLockAlwaysBattery) {
-                    // Show battery at low percent
-                    string = getContext().getString(R.string.lockscreen_always_low_battery, mBatteryLevel);
-                            icon.value = BATTERY_LOW_ICON;
-                }
-            } else if (mLockAlwaysBattery) {
-                // Always show battery
-                string = getContext().getString(R.string.lockscreen_always_battery, mBatteryLevel);
-                icon.value = BATTERY_ICON;
+            } else if (mAlwaysShowBattery) {
+                // Discharging
+                string = getContext().getString(R.string.lockscreen_discharging, mBatteryLevel);
+                icon.value = DISCHARGING_ICON;
             }
         } else if (!inWidgetMode() && mOwnerInfoView == null && mOwnerInfoText != null) {
             // OwnerInfo shows in status if we don't have a dedicated widget

@@ -115,6 +115,7 @@ public class StatusBarIconView extends AnimatedImageView {
         return a.equals(b);
     }
 
+    
     /**
      * Returns whether the set succeeded.
      */

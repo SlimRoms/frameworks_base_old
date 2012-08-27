@@ -47,16 +47,8 @@ interface ITelephony {
     /**
      * Toggle between 3G and LTE (NT_MODE_CDMA, NT_MODE_GLOBAL)
      * @param boolean to turn on and off LTE
-     * @hide
      */
-     void toggleLTE(boolean on);
-
-     /**
-      * Toggle between 2G and 3G (NT_MODE_GSM, NT_MODE_WCDMA_PREF)
-      * @param boolean to turn on and off 2G
-      * @hide
-      */
-      void toggle2G(boolean on);
+    void toggleLTE(boolean on);
 
     /**
      * If there is currently a call in progress, show the call screen.
@@ -298,5 +290,7 @@ interface ITelephony {
      * Returns the all observed cell information of the device.
      */
     List<CellInfo> getAllCellInfo();
+
+    int getLteOnGsmMode();
 }
 

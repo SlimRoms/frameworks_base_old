@@ -1,31 +1,31 @@
 <!-- This file defines the base public resources exported by the
-     platform, which must always exist. -->
+   platform, which must always exist. -->
 
 <!-- ***************************************************************
-     ***************************************************************
-     IMPORTANT NOTE FOR ANYONE MODIFYING THIS FILE
-     READ THIS BEFORE YOU MAKE ANY CHANGES
+   ***************************************************************
+   IMPORTANT NOTE FOR ANYONE MODIFYING THIS FILE
+   READ THIS BEFORE YOU MAKE ANY CHANGES
 
-     This file defines the binary compatibility for resources.  As such,
-     you must be very careful when making changes here, or you will
-     completely break backwards compatibility with old applications.
+   This file defines the binary compatibility for resources.  As such,
+   you must be very careful when making changes here, or you will
+   completely break backwards compatibility with old applications.
 
-     To avoid breaking compatibility, all new resources must be placed
-     at the end of the list of resources of the same type.  Placing a resource
-     in the middle of type will cause all following resources to be
-     assigned new resource numbers, breaking compatibility.
+   To avoid breaking compatibility, all new resources must be placed
+   at the end of the list of resources of the same type.  Placing a resource
+   in the middle of type will cause all following resources to be
+   assigned new resource numbers, breaking compatibility.
 
-     ***************************************************************
-     *************************************************************** -->
+   ***************************************************************
+   *************************************************************** -->
 <resources>
 
   <!-- We don't want to publish private symbols in android.R as part of the
-       SDK.  Instead, put them here. -->
+     SDK.  Instead, put them here. -->
   <private-symbols package="com.android.internal" />
 
   <!-- Private symbols that we need to reference from framework code.  See
-       frameworks/base/core/res/MakeJavaSymbols.sed for how to easily generate
-       this.
+     frameworks/base/core/res/MakeJavaSymbols.sed for how to easily generate
+     this.
   -->
   <java-symbol type="id" name="account_name" />
   <java-symbol type="id" name="account_row_icon" />
@@ -214,6 +214,7 @@
   <java-symbol type="id" name="status_bar_latest_event_content" />
   <java-symbol type="id" name="action_divider" />
   <java-symbol type="id" name="overflow_divider" />
+  <java-symbol type="id" name="openurl" />
 
   <java-symbol type="attr" name="actionModeShareDrawable" />
   <java-symbol type="attr" name="alertDialogCenterButtons" />
@@ -265,6 +266,7 @@
   <java-symbol type="bool" name="config_sendAudioBecomingNoisy" />
   <java-symbol type="bool" name="config_enableScreenshotChord" />
   <java-symbol type="bool" name="config_bluetooth_default_profiles" />
+  <java-symbol type="bool" name="config_wifiApFirmwareReload" />
 
   <java-symbol type="integer" name="config_cursorWindowSize" />
   <java-symbol type="integer" name="config_longPressOnPowerBehavior" />
@@ -1019,6 +1021,7 @@
   <java-symbol type="drawable" name="ic_lockscreen_camera" />
   <java-symbol type="drawable" name="ic_lockscreen_silent" />
   <java-symbol type="drawable" name="ic_lockscreen_unlock" />
+  <java-symbol type="drawable" name="ic_lockscreen_camera" />
   <java-symbol type="drawable" name="ic_action_assist_generic" />
   <java-symbol type="drawable" name="notification_bg" />
   <java-symbol type="drawable" name="notification_bg_low" />
@@ -1202,8 +1205,6 @@
   <java-symbol type="array" name="lockscreen_targets_when_silent" />
   <java-symbol type="array" name="lockscreen_targets_when_soundon" />
   <java-symbol type="array" name="lockscreen_targets_with_camera" />
-  <java-symbol type="array" name="reboot_options" />
-  <java-symbol type="array" name="reboot_values" />
   <java-symbol type="attr" name="actionModePopupWindowStyle" />
   <java-symbol type="attr" name="dialogCustomTitleDecorLayout" />
   <java-symbol type="attr" name="dialogTitleDecorLayout" />
@@ -1223,13 +1224,17 @@
   <java-symbol type="dimen" name="navigation_bar_height_landscape" />
   <java-symbol type="dimen" name="navigation_bar_width" />
   <java-symbol type="dimen" name="status_bar_height" />
+  <java-symbol type="dimen" name="lockscreen_target_inset" />
   <java-symbol type="drawable" name="ic_jog_dial_sound_off" />
   <java-symbol type="drawable" name="ic_jog_dial_sound_on" />
   <java-symbol type="drawable" name="ic_jog_dial_unlock" />
   <java-symbol type="drawable" name="ic_jog_dial_vibrate_on" />
   <java-symbol type="drawable" name="ic_lock_airplane_mode" />
   <java-symbol type="drawable" name="ic_lock_airplane_mode_off" />
-  <java-symbol type="drawable" name="ic_lock_reboot" />
+  <java-symbol type="drawable" name="ic_lockscreen_lock_pressed" />
+  <java-symbol type="drawable" name="ic_lockscreen_target_activated" />
+  <java-symbol type="drawable" name="ic_lockscreen_unlock_activated" />
+  <java-symbol type="drawable" name="ic_lockscreen_unlock_normal" />
   <java-symbol type="drawable" name="ic_menu_cc" />
   <java-symbol type="drawable" name="jog_tab_bar_left_unlock" />
   <java-symbol type="drawable" name="jog_tab_bar_right_sound_off" />
@@ -1280,6 +1285,7 @@
   <java-symbol type="id" name="pukDel" />
   <java-symbol type="id" name="pukDisplay" />
   <java-symbol type="id" name="right_icon" />
+  <java-symbol type="id" name="root" />
   <java-symbol type="id" name="seven" />
   <java-symbol type="id" name="six" />
   <java-symbol type="id" name="status" />
@@ -1323,6 +1329,7 @@
   <java-symbol type="layout" name="screen_title" />
   <java-symbol type="layout" name="screen_title_icons" />
   <java-symbol type="string" name="abbrev_wday_month_day_no_year" />
+  <java-symbol type="string" name="app_killed_message" />
   <java-symbol type="string" name="android_upgrading_title" />
   <java-symbol type="string" name="faceunlock_multiple_failures" />
   <java-symbol type="string" name="global_action_power_off" />
@@ -1369,7 +1376,6 @@
   <java-symbol type="string" name="lockscreen_too_many_failed_pin_attempts_dialog_message" />
   <java-symbol type="string" name="lockscreen_unlock_label" />
   <java-symbol type="string" name="status_bar_device_locked" />
-  <java-symbol type="string" name="reboot" />
   <java-symbol type="style" name="Animation.LockScreen" />
   <java-symbol type="style" name="Theme.Dialog.RecentApplications" />
   <java-symbol type="style" name="Theme.ExpandedMenu" />
@@ -1547,7 +1553,6 @@
   <java-symbol type="string" name="vpn_title" />
   <java-symbol type="string" name="vpn_title_long" />
   <java-symbol type="string" name="wallpaper_binding_label" />
-  <java-symbol type="string" name="reboot_progress" />
   <java-symbol type="style" name="Theme.Dialog.AppError" />
   <java-symbol type="style" name="Theme.Toast" />
   <java-symbol type="xml" name="storage_list" />
@@ -1688,8 +1693,8 @@
   <eat-comment />
 
 <!-- ===============================================================
-     Resources for version 1 of the platform.
-     =============================================================== -->
+   Resources for version 1 of the platform.
+   =============================================================== -->
   <eat-comment />
 
   <public type="attr" name="theme" id="0x01010000" />
@@ -2594,15 +2599,15 @@
   <public type="anim" name="decelerate_interpolator" id="0x010a0006" />
 
 <!-- ===============================================================
-     Resources added in version 2 of the platform.
-     =============================================================== -->
+   Resources added in version 2 of the platform.
+   =============================================================== -->
   <eat-comment />
 
   <public type="attr" name="marqueeRepeatLimit" id="0x0101021d" />
 
 <!-- ===============================================================
-     Resources added in version 3 of the platform (Cupcake).
-     =============================================================== -->
+   Resources added in version 3 of the platform (Cupcake).
+   =============================================================== -->
   <eat-comment />
 
   <public type="attr" name="windowNoDisplay" id="0x0101021e" />
@@ -2682,44 +2687,44 @@
   <public type="attr" name="imeExtractExitAnimation" id="0x01010269" />
 
   <!-- The part of the UI shown by an
-       {@link android.inputmethodservice.InputMethodService} that contains the
-       views for interacting with the user in extraction mode. -->
+     {@link android.inputmethodservice.InputMethodService} that contains the
+     views for interacting with the user in extraction mode. -->
   <public type="id" name="extractArea" id="0x0102001c" />
 
   <!-- The part of the UI shown by an
-       {@link android.inputmethodservice.InputMethodService} that contains the
-       views for displaying candidates for what the user has entered. -->
+     {@link android.inputmethodservice.InputMethodService} that contains the
+     views for displaying candidates for what the user has entered. -->
   <public type="id" name="candidatesArea" id="0x0102001d" />
 
   <!-- The part of the UI shown by an
-       {@link android.inputmethodservice.InputMethodService} that contains the
-       views for entering text using the screen. -->
+     {@link android.inputmethodservice.InputMethodService} that contains the
+     views for entering text using the screen. -->
   <public type="id" name="inputArea" id="0x0102001e" />
 
   <!-- Context menu ID for the "Select All" menu item to select all text
-       in a text view. -->
+     in a text view. -->
   <public type="id" name="selectAll" id="0x0102001f" />
   <!-- Context menu ID for the "Cut" menu item to copy and delete the currently
-       selected (or all) text in a text view to the clipboard. -->
+     selected (or all) text in a text view to the clipboard. -->
   <public type="id" name="cut" id="0x01020020" />
   <!-- Context menu ID for the "Copy" menu item to copy the currently
-       selected (or all) text in a text view to the clipboard. -->
+     selected (or all) text in a text view to the clipboard. -->
   <public type="id" name="copy" id="0x01020021" />
   <!-- Context menu ID for the "Paste" menu item to copy the current contents
-       of the clipboard into the text view. -->
+     of the clipboard into the text view. -->
   <public type="id" name="paste" id="0x01020022" />
   <!-- Context menu ID for the "Copy URL" menu item to copy the currently
-       selected URL from the text view to the clipboard. -->
+     selected URL from the text view to the clipboard. -->
   <public type="id" name="copyUrl" id="0x01020023" />
   <!-- Context menu ID for the "Input Method" menu item to being up the
-       input method picker dialog, allowing the user to switch to another
-       input method. -->
+     input method picker dialog, allowing the user to switch to another
+     input method. -->
   <public type="id" name="switchInputMethod" id="0x01020024" />
   <!-- View ID of the text editor inside of an extracted text layout. -->
   <public type="id" name="inputExtractEditText" id="0x01020025" />
 
   <!-- View ID of the {@link android.inputmethodservice.KeyboardView} within
-        an input method's input area. -->
+    an input method's input area. -->
   <public type="id" name="keyboardView" id="0x01020026" />
   <!-- View ID of a {@link android.view.View} to close a popup keyboard -->
   <public type="id" name="closeButton" id="0x01020027" />
@@ -2755,8 +2760,8 @@
   <public type="integer" name="config_longAnimTime" id="0x010e0002" />
 
 <!-- ===============================================================
-     Resources added in version 4 of the platform (Donut).
-     =============================================================== -->
+   Resources added in version 4 of the platform (Donut).
+   =============================================================== -->
   <eat-comment />
 
   <public type="attr" name="tension" id="0x0101026a" />
@@ -2812,8 +2817,8 @@
   <public type="anim" name="linear_interpolator" id="0x010a000b" />
 
 <!-- ===============================================================
-     Resources added in version 5 of the platform (Eclair).
-     =============================================================== -->
+   Resources added in version 5 of the platform (Eclair).
+   =============================================================== -->
   <eat-comment />
 
   <public type="attr" name="required" id="0x0101028e" />
@@ -2858,16 +2863,16 @@
   <public type="style" name="TextAppearance.SearchResult.Subtitle" id="0x01030064" />
 
   <!-- Semi-transparent background that can be used when placing a dark
-       themed UI on top of some arbitrary background (such as the
-       wallpaper).  This darkens the background sufficiently that the UI
-       can be seen. -->
+     themed UI on top of some arbitrary background (such as the
+     wallpaper).  This darkens the background sufficiently that the UI
+     can be seen. -->
   <public type="drawable" name="screen_background_dark_transparent" id="0x010800a9" />
   <public type="drawable" name="screen_background_light_transparent" id="0x010800aa" />
   <public type="drawable" name="stat_notify_sdcard_prepare" id="0x010800ab" />
 
 <!-- ===============================================================
-     Resources added in version 6 of the platform (Eclair 2.0.1).
-     =============================================================== -->
+   Resources added in version 6 of the platform (Eclair 2.0.1).
+   =============================================================== -->
   <eat-comment />
 
   <public type="attr" name="quickContactBadgeStyleWindowSmall" id="0x010102ae" />
@@ -2878,8 +2883,8 @@
   <public type="attr" name="quickContactBadgeStyleSmallWindowLarge" id="0x010102b3" />
 
 <!-- ===============================================================
-     Resources added in version 7 of the platform (Eclair MR1).
-     =============================================================== -->
+   Resources added in version 7 of the platform (Eclair MR1).
+   =============================================================== -->
   <eat-comment />
 
   <public type="attr" name="author" id="0x010102b4" />
@@ -2887,15 +2892,15 @@
 
 
 <!-- ===============================================================
-     Resources added in version 8 of the platform (Eclair MR2).
-     =============================================================== -->
+   Resources added in version 8 of the platform (Eclair MR2).
+   =============================================================== -->
   <eat-comment />
 
   <public type="attr" name="expandableListViewWhiteStyle" id="0x010102b6" />
 
 <!-- ===============================================================
-     Resources added in version 8 of the platform (Froyo / 2.2)
-     =============================================================== -->
+   Resources added in version 8 of the platform (Froyo / 2.2)
+   =============================================================== -->
   <eat-comment />
   <public type="attr" name="installLocation" id="0x010102b7" />
   <public type="attr" name="vmSafeMode" id="0x010102b8" />
@@ -2910,8 +2915,8 @@
   <public type="anim" name="cycle_interpolator" id="0x010a000c" />
 
 <!-- ===============================================================
-     Resources added in version 9 of the platform (Gingerbread / 2.3)
-     =============================================================== -->
+   Resources added in version 9 of the platform (Gingerbread / 2.3)
+   =============================================================== -->
   <eat-comment />
   <public type="attr" name="logo" id="0x010102be" />
   <public type="attr" name="xlargeScreens" id="0x010102bf" />
@@ -2942,8 +2947,8 @@
   <public type="style" name="TextAppearance.StatusBar.EventContent.Title" id="0x01030068" />
 
 <!-- ===============================================================
-     Resources added in version 11 of the platform (Honeycomb / 3.0).
-     =============================================================== -->
+   Resources added in version 11 of the platform (Honeycomb / 3.0).
+   =============================================================== -->
   <eat-comment />
 
   <public type="attr" name="allContactsName" id="0x010102cc" />
@@ -3121,22 +3126,22 @@
   <!-- An interpolator where the change starts backward then flings forward. -->
   <public type="interpolator" name="anticipate" id="0x010c0007" />
   <!-- An interpolator where the change flings forward and overshoots the last
-       value then comes back. -->
+     value then comes back. -->
   <public type="interpolator" name="overshoot" id="0x010c0008" />
   <!-- An interpolator where the change starts backward then flings forward and
-       overshoots the target value and finally goes back to the final value. -->
+     overshoots the target value and finally goes back to the final value. -->
   <public type="interpolator" name="anticipate_overshoot" id="0x010c0009" />
   <!-- An interpolator where the change bounces at the end. -->
   <public type="interpolator" name="bounce" id="0x010c000a" />
   <!-- An interpolator where the rate of change is constant. -->
   <public type="interpolator" name="linear" id="0x010c000b" />
   <!-- Repeats the animation for one cycle. The rate of change follows a
-       sinusoidal pattern. -->
+     sinusoidal pattern. -->
   <public type="interpolator" name="cycle" id="0x010c000c" />
 
   <public type="id" name="home" id="0x0102002c" />
   <!-- Context menu ID for the "Select text..." menu item to switch to text
-       selection context mode in text views. -->
+     selection context mode in text views. -->
   <public type="id" name="selectTextMode" id="0x0102002d" />
 
   <public type="dimen" name="dialog_min_width_major" id="0x01050003" />
@@ -3145,23 +3150,23 @@
   <public type="dimen" name="notification_large_icon_height" id="0x01050006" />
 
   <!-- Standard content view for a {@link android.app.ListFragment}.
-       If you are implementing a subclass of ListFragment with your
-       own customized content, you can include this layout in that
-       content to still retain all of the standard functionality of
-       the base class. -->
+     If you are implementing a subclass of ListFragment with your
+     own customized content, you can include this layout in that
+     content to still retain all of the standard functionality of
+     the base class. -->
   <public type="layout" name="list_content" id="0x01090014" />
 
   <!-- A simple ListView item layout which can contain text and support (single or multiple) item selection. -->
   <public type="layout" name="simple_selectable_list_item" id="0x01090015" />
 
   <!-- A version of {@link #simple_list_item_1} that is able to change its
-       background state to indicate when it is activated (that is checked by
-       a ListView). -->
+     background state to indicate when it is activated (that is checked by
+     a ListView). -->
   <public type="layout" name="simple_list_item_activated_1" id="0x01090016" />
 
   <!-- A version of {@link #simple_list_item_2} that is able to change its
-       background state to indicate when it is activated (that is checked by
-       a ListView). -->
+     background state to indicate when it is activated (that is checked by
+     a ListView). -->
   <public type="layout" name="simple_list_item_activated_2" id="0x01090017" />
 
   <public type="drawable" name="dialog_holo_dark_frame" id="0x010800b2" />
@@ -3309,15 +3314,15 @@
   <public type="mipmap" name="sym_def_app_icon" id="0x010d0000" />
 
 <!-- ===============================================================
-     Resources added in version 12 of the platform (Honeycomb MR 1 / 3.1)
-     =============================================================== -->
+   Resources added in version 12 of the platform (Honeycomb MR 1 / 3.1)
+   =============================================================== -->
   <eat-comment />
   <public type="attr" name="textCursorDrawable" id="0x01010362" />
   <public type="attr" name="resizeMode" id="0x01010363" />
 
 <!-- ===============================================================
-     Resources added in version 13 of the platform (Honeycomb MR 2 / 3.2)
-     =============================================================== -->
+   Resources added in version 13 of the platform (Honeycomb MR 2 / 3.2)
+   =============================================================== -->
   <eat-comment />
   <public type="attr" name="requiresSmallestWidthDp" id="0x01010364" />
   <public type="attr" name="compatibleWidthLimitDp" id="0x01010365" />
@@ -3366,8 +3371,8 @@
   <public type="style" name="TextAppearance.Holo.DialogWindowTitle" id="0x01030117" />
 
 <!-- ===============================================================
-     Resources added in version 14 of the platform (Ice Cream Sandwich / 4.0)
-     =============================================================== -->
+   Resources added in version 14 of the platform (Ice Cream Sandwich / 4.0)
+   =============================================================== -->
   <eat-comment />
   <public type="attr" name="state_hovered" id="0x01010367" />
   <public type="attr" name="state_drag_can_accept" id="0x01010368" />
@@ -3638,11 +3643,10 @@
   <public type="color" name="holo_orange_dark" id="0x01060019" />
   <public type="color" name="holo_purple" id="0x0106001a" />
   <public type="color" name="holo_blue_bright" id="0x0106001b" />
-  <public type="color" name="holo_white_light" id="0x0106001c" />
 
 <!-- ===============================================================
-     Resources added in version 16 of the platform (Jelly Bean)
-     =============================================================== -->
+   Resources added in version 16 of the platform (Jelly Bean)
+   =============================================================== -->
   <eat-comment />
   <public type="attr" name="parentActivityName" id="0x010103a7" />
   <public type="attr" name="permissionGroupFlags" id="0x010103a8" />
@@ -3659,19 +3663,48 @@
   <public type="style" name="Widget.DeviceDefault.Light.MediaRouteButton" id="0x010301d8" />
 
 <!-- ===============================================================
-     Resources added in version JB of AOKP
-     =============================================================== -->
+   Resources added in version 10 of CyanogenMod
+   =============================================================== -->
   <eat-comment />
 
+  <!-- Config.xml entries -->
   <java-symbol type="string" name="config_legacyUmsLunFile" />
   <java-symbol type="bool" name="config_forceDisableHardwareKeyboard" />
   <java-symbol type="array" name="config_telephony_set_audioparameters" />
   <java-symbol type="bool" name="config_autoBrightnessButtonKeyboard" />
   <java-symbol type="string" name="config_deviceKeyHandlerLib" />
   <java-symbol type="string" name="config_deviceKeyHandlerClass" />
+  <java-symbol type="integer" name="config_screenOnAnimation" />
+  <java-symbol type="integer" name="config_backKillTimeout" />
+  <java-symbol type="bool" name="config_screenOffAnimation" />
+  <java-symbol type="bool" name="config_hasRotationLockSwitch" />
+  <java-symbol type="bool" name="config_hasDockBattery" />
   <java-symbol type="bool" name="config_noDelayInATwoDP" />
   <java-symbol type="bool" name="config_smsSamsungCdmaAlternateMessageIDEncoding" />
+  <java-symbol type="integer" name="config_deviceHardwareKeys" />
+  <java-symbol type="bool" name="config_hasRemovableLid" />
 
+  <!-- Notification and battery light -->
+  <java-symbol type="bool" name="config_intrusiveBatteryLed" />
+  <java-symbol type="bool" name="config_multiColorBatteryLed" />
+  <java-symbol type="array" name="notification_light_package_mapping" />
+
+  <!-- Power menu -->
+  <java-symbol type="string" name="global_action_screenshot" />
+  <java-symbol type="string" name="global_action_choose_profile" />
+  <java-symbol type="string" name="global_action_reboot" />
+  <java-symbol type="string" name="global_actions" />
+  <java-symbol type="string" name="reboot_system" />
+  <java-symbol type="string" name="reboot_progress" />
+  <java-symbol type="array" name="shutdown_reboot_options" />
+  <java-symbol type="array" name="shutdown_reboot_actions" />
+  <java-symbol type="drawable" name="ic_lock_screenshot" />
+  <java-symbol type="drawable" name="ic_lock_reboot" />
+  <java-symbol type="drawable" name="ic_lock_profile" />
+
+  <!-- Profiles -->
+  <java-symbol type="xml" name="profile_default" />
+  <java-symbol type="string" name="wildcardProfile" />
 
   <!-- Lock screen Weather -->
   <java-symbol type="drawable" name="weather_0" />
@@ -3793,6 +3826,83 @@
   <java-symbol type="id" name="update_time" />
   <java-symbol type="id" name="weather_temps_panel" />
 
+  <!-- Lock screen calendar -->
+  <java-symbol type="drawable" name="ic_lock_idle_calendar" />
+  <java-symbol type="id" name="calendar_panel" />
+  <java-symbol type="id" name="calendar_event_title" />
+  <java-symbol type="id" name="calendar_event_details" />
+
+  <!-- Power widget -->
+  <java-symbol type="string" name="hour" />
+  <java-symbol type="string" name="hours" />
+  <java-symbol type="string" name="minute" />
+  <java-symbol type="string" name="minutes" />
+  <java-symbol type="string" name="second" />
+  <java-symbol type="string" name="seconds" />
+
+  <!-- Lock screen always show battery -->
+  <java-symbol type="string" name="lockscreen_discharging" />
+
+  <!-- Options that show upon long-pressing a key on the physical keyboard -->
+  <java-symbol type="string" name="symbol_picker_0" />
+  <java-symbol type="string" name="symbol_picker_1" />
+  <java-symbol type="string" name="symbol_picker_2" />
+  <java-symbol type="string" name="symbol_picker_3" />
+  <java-symbol type="string" name="symbol_picker_4" />
+  <java-symbol type="string" name="symbol_picker_5" />
+  <java-symbol type="string" name="symbol_picker_7" />
+  <java-symbol type="string" name="symbol_picker_a" />
+  <java-symbol type="string" name="symbol_picker_A" />
+  <java-symbol type="string" name="symbol_picker_c" />
+  <java-symbol type="string" name="symbol_picker_C" />
+  <java-symbol type="string" name="symbol_picker_closing_parenthesis" />
+  <java-symbol type="string" name="symbol_picker_comma" />
+  <java-symbol type="string" name="symbol_picker_d" />
+  <java-symbol type="string" name="symbol_picker_D" />
+  <java-symbol type="string" name="symbol_picker_dollar" />
+  <java-symbol type="string" name="symbol_picker_e" />
+  <java-symbol type="string" name="symbol_picker_E" />
+  <java-symbol type="string" name="symbol_picker_equal" />
+  <java-symbol type="string" name="symbol_picker_exclamation" />
+  <java-symbol type="string" name="symbol_picker_g" />
+  <java-symbol type="string" name="symbol_picker_G" />
+  <java-symbol type="string" name="symbol_picker_gt" />
+  <java-symbol type="string" name="symbol_picker_i" />
+  <java-symbol type="string" name="symbol_picker_I" />
+  <java-symbol type="string" name="symbol_picker_l" />
+  <java-symbol type="string" name="symbol_picker_L" />
+  <java-symbol type="string" name="symbol_picker_lt" />
+  <java-symbol type="string" name="symbol_picker_minus" />
+  <java-symbol type="string" name="symbol_picker_n" />
+  <java-symbol type="string" name="symbol_picker_N" />
+  <java-symbol type="string" name="symbol_picker_o" />
+  <java-symbol type="string" name="symbol_picker_O" />
+  <java-symbol type="string" name="symbol_picker_opening_parenthesis" />
+  <java-symbol type="string" name="symbol_picker_percent" />
+  <java-symbol type="string" name="symbol_picker_plus" />
+  <java-symbol type="string" name="symbol_picker_question" />
+  <java-symbol type="string" name="symbol_picker_quote" />
+  <java-symbol type="string" name="symbol_picker_r" />
+  <java-symbol type="string" name="symbol_picker_R" />
+  <java-symbol type="string" name="symbol_picker_s" />
+  <java-symbol type="string" name="symbol_picker_S" />
+  <java-symbol type="string" name="symbol_picker_slash" />
+  <java-symbol type="string" name="symbol_picker_star" />
+  <java-symbol type="string" name="symbol_picker_sym" />
+  <java-symbol type="string" name="symbol_picker_t" />
+  <java-symbol type="string" name="symbol_picker_T" />
+  <java-symbol type="string" name="symbol_picker_u" />
+  <java-symbol type="string" name="symbol_picker_U" />
+  <java-symbol type="string" name="symbol_picker_y" />
+  <java-symbol type="string" name="symbol_picker_Y" />
+  <java-symbol type="string" name="symbol_picker_z" />
+  <java-symbol type="string" name="symbol_picker_Z" />
+
+<!-- ===============================================================
+     AVRCP 1.3 Meta Data Resources
+     =============================================================== -->
+  <eat-comment />
+
   <java-symbol type="array" name="avrcp_meta_changed_intents" />
   <java-symbol type="array" name="avrcp_playstate_changed_intents" />
   <java-symbol type="array" name="avrcp_special_extra_keys" />
@@ -3806,11 +3916,10 @@
   <java-symbol type="string" name="com.amazon.mp3.playstatechanged_album" />
   <java-symbol type="string" name="com.amazon.mp3.playstatechanged_id" />
 
-
-<!-- Always show battery status on lockscreen -->
-  <java-symbol type="string" name="lockscreen_always_battery" />
-  <java-symbol type="string" name="lockscreen_always_low_battery" />
-
   <!-- WiredAccessoryObserver -->
   <java-symbol type="array" name="config_accessoryDockNames" />
+
+  <!-- HW rotation lock -->
+  <java-symbol type="string" name="toast_rotation_unlocked" />
+  <java-symbol type="string" name="toast_rotation_locked" />
 </resources>

@@ -552,7 +552,6 @@ public class NetworkController extends BroadcastReceiver {
                 case TelephonyManager.NETWORK_TYPE_HSDPA:
                 case TelephonyManager.NETWORK_TYPE_HSUPA:
                 case TelephonyManager.NETWORK_TYPE_HSPA:
-                case TelephonyManager.NETWORK_TYPE_HSPAP:
                     if (mHspaDataDistinguishable) {
                         mDataIconList = TelephonyIcons.DATA_H[mInetCondition];
                         mDataTypeIconId = R.drawable.stat_sys_data_connected_h;
@@ -564,6 +563,12 @@ public class NetworkController extends BroadcastReceiver {
                         mContentDescriptionDataType = mContext.getString(
                                 R.string.accessibility_data_connection_3g);
                     }
+                    break;
+                case TelephonyManager.NETWORK_TYPE_HSPAP:
+                    mDataIconList = TelephonyIcons.DATA_HP[mInetCondition];
+                    mDataTypeIconId = R.drawable.stat_sys_data_connected_hp;
+                    mContentDescriptionDataType = mContext.getString(
+                            R.string.accessibility_data_connection_HP);
                     break;
                 case TelephonyManager.NETWORK_TYPE_CDMA:
                     // display 1xRTT for IS95A/B
@@ -917,6 +922,7 @@ public class NetworkController extends BroadcastReceiver {
         String wifiLabel = "";
         String mobileLabel = "";
         int N;
+        final boolean emergencyOnly = (mServiceState != null && mServiceState.isEmergencyOnly());
 
         if (!mHasMobileDataFeature) {
             mDataSignalIconId = mPhoneSignalIconId = 0;
@@ -932,10 +938,12 @@ public class NetworkController extends BroadcastReceiver {
 
             if (mDataConnected) {
                 mobileLabel = mNetworkName;
-            } else if (mConnected) {
-                if (hasService()) {
+            } else if (mConnected || emergencyOnly) {
+                if (hasService() || emergencyOnly) {
+                    // The isEmergencyOnly test covers the case of a phone with no SIM
                     mobileLabel = mNetworkName;
                 } else {
+                    // Tablets, basically
                     mobileLabel = "";
                 }
             } else {
@@ -965,6 +973,8 @@ public class NetworkController extends BroadcastReceiver {
                 combinedActivityIconId = mMobileActivityIconId;
                 combinedSignalIconId = mDataSignalIconId; // set by updateDataIcon()
                 mContentDescriptionCombinedSignal = mContentDescriptionDataType;
+            } else {
+                mMobileActivityIconId = 0;
             }
         }
 

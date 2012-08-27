@@ -21,13 +21,11 @@ import com.android.internal.R;
 import android.app.Dialog;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
-import android.database.ContentObserver;
 import android.media.AudioManager;
 import android.media.AudioService;
 import android.media.AudioSystem;
@@ -36,8 +34,10 @@ import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
+import android.os.RemoteException;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.provider.Settings.System;
 import android.util.Log;
 import android.view.WindowManager.LayoutParams;
 import android.widget.ImageView;
@@ -100,11 +100,16 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
     private static final int STREAM_MASTER = -100;
     // Pseudo stream type for remote volume is defined in AudioService.STREAM_REMOTE_MUSIC
 
+    public static final String ACTION_VOLUME_OVERLAY_CHANGED
+        = "android.intent.action.VOLUME_OVERLAY_CHANGED";
+
     protected Context mContext;
     private AudioManager mAudioManager;
     protected AudioService mAudioService;
     private boolean mRingIsSilent;
     private boolean mShowCombinedVolumes;
+    private boolean mVoiceCapable;
+    private int mCurrentOverlayStyle = -1;
 
     /** Dialog containing all the sliders */
     private final Dialog mDialog;
@@ -123,34 +128,7 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
     /** Currently active stream that shows up at the top of the list of sliders */
     private int mActiveStreamType = -1;
     /** All the slider controls mapped by stream type */
-    private HashMap<Integer, StreamControl> mStreamControls;
-
-    /** Used by the observer */
-    private Handler mHandler;
-
-    private boolean mRingerAndNotificationStreamsLinked = true;
-
-    /** Watch over the toggle in order to update when user changes preference */
-    class SettingsObserver extends ContentObserver {
-
-        public SettingsObserver(Handler handler) {
-            super(handler);
-        }
-
-        void observe() {
-            ContentResolver resolver = mContext.getContentResolver();
-            resolver.registerContentObserver(
-                    Settings.System.getUriFor(Settings.System.ENABLE_VOLUME_OPTIONS), false, this);
-            resolver.registerContentObserver(
-                    Settings.System.getUriFor(Settings.System.VOLUME_LINK_NOTIFICATION), false, this);
-        }
-
-        @Override
-        public void onChange(boolean selfChange) {
-            updateSettings();
-        }
-
-    }
+    private HashMap<Integer,StreamControl> mStreamControls;
 
     private enum StreamResources {
         BluetoothSCOStream(AudioManager.STREAM_BLUETOOTH_SCO,
@@ -162,13 +140,18 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
                 R.string.volume_icon_description_ringer,
                 R.drawable.ic_audio_ring_notif,
                 R.drawable.ic_audio_ring_notif_mute,
-                false),
+                true),
         VoiceStream(AudioManager.STREAM_VOICE_CALL,
                 R.string.volume_icon_description_incall,
-                R.drawable.ic_audio_phone, R.drawable.ic_audio_phone, false), AlarmStream(
-                AudioManager.STREAM_ALARM, R.string.volume_alarm,
-                R.drawable.ic_audio_alarm, R.drawable.ic_audio_alarm_mute, true), MediaStream(
-                AudioManager.STREAM_MUSIC,
+                R.drawable.ic_audio_phone,
+                R.drawable.ic_audio_phone,
+                false),
+        AlarmStream(AudioManager.STREAM_ALARM,
+                R.string.volume_alarm,
+                R.drawable.ic_audio_alarm,
+                R.drawable.ic_audio_alarm_mute,
+                true),
+        MediaStream(AudioManager.STREAM_MUSIC,
                 R.string.volume_icon_description_media,
                 R.drawable.ic_audio_vol,
                 R.drawable.ic_audio_vol_mute,
@@ -237,6 +220,16 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         mAudioService = volumeService;
 
+        // For now, only show master volume if master volume is supported
+        boolean useMasterVolume = context.getResources().getBoolean(
+                com.android.internal.R.bool.config_useMasterVolume);
+        if (useMasterVolume) {
+            for (int i = 0; i < STREAMS.length; i++) {
+                StreamResources streamRes = STREAMS[i];
+                streamRes.show = (streamRes.streamType == STREAM_MASTER);
+            }
+        }
+
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = mView = inflater.inflate(R.layout.volume_adjust, null);
@@ -286,44 +279,36 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
         mToneGenerators = new ToneGenerator[AudioSystem.getNumStreamTypes()];
         mVibrator = (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
 
-        mShowCombinedVolumes = Settings.System.getInt(
-                mContext.getContentResolver(),
-                Settings.System.ENABLE_VOLUME_OPTIONS, 0) == 1
-                || !context.getResources().getBoolean(R.bool.config_voice_capable);
-        toggleMore(mShowCombinedVolumes);
-
-        mHandler = new Handler();
-        SettingsObserver settingsObserver = new SettingsObserver(mHandler);
-        settingsObserver.observe();
-        listenToRingerMode();
-    }
-
-    /** Used by the observer to update the most recent settings */
-    public void updateSettings() {
-        ContentResolver resolver = mContext.getContentResolver();
-        mShowCombinedVolumes = Settings.System.getInt(
-                resolver,
-                Settings.System.ENABLE_VOLUME_OPTIONS, 0) == 1;
-        mRingerAndNotificationStreamsLinked = Settings.System.getInt(
-                resolver,
-                Settings.System.VOLUME_LINK_NOTIFICATION, 1) == 1;
-        toggleMore(mShowCombinedVolumes);
-    }
-
-    private void toggleMore(boolean toggle) {
-        // If we don't want to show multiple volumes, hide the settings button
-        // and divider
-        if (!toggle) {
+        mVoiceCapable = context.getResources().getBoolean(R.bool.config_voice_capable);
+        mShowCombinedVolumes = !mVoiceCapable && !useMasterVolume;
+        // If we don't want to show multiple volumes, hide the settings button and divider
+        if (!mShowCombinedVolumes) {
             mMoreButton.setVisibility(View.GONE);
             mDivider.setVisibility(View.GONE);
         } else {
             mMoreButton.setOnClickListener(this);
         }
+
+        // get the users preference
+        int choosenStyle = Settings.System.getInt(context.getContentResolver(),Settings.System.MODE_VOLUME_OVERLAY, -1);
+        // by default -1 is expected - deal with choosing the right default
+        if (choosenStyle == -1) {
+            if (mVoiceCapable) {
+                choosenStyle = Settings.System.VOLUME_OVERLAY_SINGLE;
+            } else {
+                choosenStyle = Settings.System.VOLUME_OVERLAY_EXPANDABLE;
+            }
+        }
+        changeOverlayStyle(choosenStyle);
+        mMoreButton.setOnClickListener(this);
+
+        listenToRingerMode();
     }
 
     private void listenToRingerMode() {
         final IntentFilter filter = new IntentFilter();
         filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
+        filter.addAction(ACTION_VOLUME_OVERLAY_CHANGED);
         mContext.registerReceiver(new BroadcastReceiver() {
 
             public void onReceive(Context context, Intent intent) {
@@ -332,18 +317,45 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
                 if (AudioManager.RINGER_MODE_CHANGED_ACTION.equals(action)) {
                     removeMessages(MSG_RINGER_MODE_CHANGED);
                     sendMessage(obtainMessage(MSG_RINGER_MODE_CHANGED));
+                } else if (ACTION_VOLUME_OVERLAY_CHANGED.equals(action)) {
+                    int state = (Integer) intent.getExtra("state");
+                    changeOverlayStyle(state);
                 }
             }
         }, filter);
     }
 
-    private boolean isMuted(int streamType) {
-        if (streamType == STREAM_MASTER) {
-            return mAudioManager.isMasterMute();
-        } else if (streamType == AudioService.STREAM_REMOTE_MUSIC) {
-            return (mAudioService.getRemoteStreamVolume() <= 0);
-        } else {
-            return mAudioManager.isStreamMute(streamType);
+    private void changeOverlayStyle(int newStyle) {
+        Log.i("VolumePanel", "changeOverlayStyle : " + newStyle);
+        // Don't change to the same style
+        if (newStyle == mCurrentOverlayStyle) return;
+        switch (newStyle) {
+            case Settings.System.VOLUME_OVERLAY_SINGLE :
+                mMoreButton.setVisibility(View.GONE);
+                mDivider.setVisibility(View.GONE);
+                mShowCombinedVolumes = false;
+                mCurrentOverlayStyle = Settings.System.VOLUME_OVERLAY_SINGLE;
+                break;
+            case Settings.System.VOLUME_OVERLAY_EXPANDABLE :
+                mMoreButton.setVisibility(View.VISIBLE);
+                mDivider.setVisibility(View.VISIBLE);
+                mShowCombinedVolumes = true;
+                mCurrentOverlayStyle = Settings.System.VOLUME_OVERLAY_EXPANDABLE;
+                break;
+            case Settings.System.VOLUME_OVERLAY_EXPANDED :
+                mMoreButton.setVisibility(View.GONE);
+                mDivider.setVisibility(View.GONE);
+                mShowCombinedVolumes = true;
+                if (mCurrentOverlayStyle == Settings.System.VOLUME_OVERLAY_NONE) {
+                    addOtherVolumes();
+                    expand();
+                }
+                mCurrentOverlayStyle = Settings.System.VOLUME_OVERLAY_EXPANDED;
+                break;
+            case Settings.System.VOLUME_OVERLAY_NONE :
+                mShowCombinedVolumes = false;
+                mCurrentOverlayStyle = Settings.System.VOLUME_OVERLAY_NONE;
+                break;
         }
     }
 
@@ -377,6 +389,10 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
         }
     }
 
+    private boolean isMuted(int streamType) {
+        return mAudioManager.isStreamMute(streamType);
+    }
+
     private void createSliders() {
         LayoutInflater inflater = (LayoutInflater) mContext
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -395,6 +411,7 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
             sc.iconRes = streamRes.iconRes;
             sc.iconMuteRes = streamRes.iconMuteRes;
             sc.icon.setImageResource(sc.iconRes);
+            sc.icon.setOnClickListener(this);
             sc.seekbarView = (SeekBar) sc.group.findViewById(R.id.seekbar);
             int plusOne = (streamType == AudioSystem.STREAM_BLUETOOTH_SCO ||
                     streamType == AudioSystem.STREAM_VOICE_CALL) ? 1 : 0;
@@ -431,6 +448,10 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
             if (!STREAMS[i].show || streamType == mActiveStreamType) {
                 continue;
             }
+            // Skip ring volume for non-phone devices
+            if (!mVoiceCapable && streamType == AudioManager.STREAM_RING) {
+                continue;
+            }
             StreamControl sc = mStreamControls.get(streamType);
             mSliderGroup.addView(sc.group);
             updateSlider(sc);
@@ -464,10 +485,22 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
     private void expand() {
         final int count = mSliderGroup.getChildCount();
         for (int i = 0; i < count; i++) {
-            mSliderGroup.getChildAt(i).setVisibility(View.VISIBLE);
+            if (mSliderGroup.getChildAt(i).getVisibility() != View.VISIBLE) {
+                mSliderGroup.getChildAt(i).setVisibility(View.VISIBLE);
+            }
         }
-        mMoreButton.setVisibility(View.INVISIBLE);
-        mDivider.setVisibility(View.INVISIBLE);
+        mMoreButton.setVisibility(View.GONE);
+        mDivider.setVisibility(View.GONE);
+    }
+
+    private void hideSlider(int mActiveStreamType) {
+        final int count = mSliderGroup.getChildCount();
+        for (int i = 0; i < count; i++) {
+            StreamControl sc = (StreamControl) mSliderGroup.getChildAt(i).getTag();
+            if (mActiveStreamType == sc.streamType) {
+                mSliderGroup.getChildAt(i).setVisibility(View.GONE);
+            }
+        }
     }
 
     private void collapse() {
@@ -562,8 +595,12 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
 
         if ((flags & AudioManager.FLAG_SHOW_UI) != 0) {
             synchronized (this) {
-                if (mActiveStreamType != streamType) {
-                    reorderSliders(streamType);
+	            if (mActiveStreamType == -1 || streamType != mActiveStreamType) {
+	                if (streamType != mActiveStreamType && 
+	                       mCurrentOverlayStyle == Settings.System.VOLUME_OVERLAY_EXPANDABLE) {
+	                    hideSlider(mActiveStreamType);
+	                }
+                reorderSliders(streamType);
                 }
                 onShowVolumeChanged(streamType, flags);
             }
@@ -684,6 +721,17 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
                 sc.seekbarView.setMax(max);
             }
             sc.seekbarView.setProgress(index);
+            // If adjusting Ring volume and preference is to link it to Notification
+            if (streamType == mAudioManager.STREAM_RING &&
+                    System.getInt(mContext.getContentResolver(),System.VOLUME_LINK_NOTIFICATION, 1) == 1) {
+                StreamControl notifySc = mStreamControls.get(mAudioManager.STREAM_NOTIFICATION);
+                if (index > notifySc.seekbarView.getMax()) {
+                    notifySc.seekbarView.setProgress(notifySc.seekbarView.getMax());
+                } else {
+                    notifySc.seekbarView.setProgress(index);
+                }
+            }
+
             if (streamType != mAudioManager.getMasterStreamType()
                     && streamType != AudioService.STREAM_REMOTE_MUSIC && isMuted(streamType)) {
                 sc.seekbarView.setEnabled(false);
@@ -692,14 +740,19 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
             }
         }
 
-        if (!mDialog.isShowing()) {
+        // Only Show if style needs it
+        if (!mDialog.isShowing() && mCurrentOverlayStyle != Settings.System.VOLUME_OVERLAY_NONE) {
             int stream = (streamType == AudioService.STREAM_REMOTE_MUSIC) ? -1 : streamType;
             // when the stream is for remote playback, use -1 to reset the stream type evaluation
             mAudioManager.forceVolumeControlStream(stream);
             mDialog.setContentView(mView);
             // Showing dialog - use collapsed state
-            if (mShowCombinedVolumes) {
+            if (mShowCombinedVolumes && mCurrentOverlayStyle != Settings.System.VOLUME_OVERLAY_EXPANDED) {
                 collapse();
+            }
+            // If just changed the style and we need to expand
+            if (mCurrentOverlayStyle == Settings.System.VOLUME_OVERLAY_EXPANDED) {
+                expand();
             }
             mDialog.show();
         }
@@ -937,13 +990,34 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
         sendMessage(obtainMessage(MSG_TIMEOUT));
     }
 
-    public void onProgressChanged(SeekBar seekBar, int progress,
-            boolean fromUser) {
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         final Object tag = seekBar.getTag();
         if (fromUser && tag instanceof StreamControl) {
             StreamControl sc = (StreamControl) tag;
             if (getStreamVolume(sc.streamType) != progress) {
                 setStreamVolume(sc.streamType, progress, 0);
+                // if audio is linked then adjust other one if change made by user
+                if (fromUser && System.getInt(mContext.getContentResolver(),System.VOLUME_LINK_NOTIFICATION, 1) == 1) {
+                    if (sc.streamType == AudioManager.STREAM_RING) {
+                        StreamControl notifySc = mStreamControls.get(AudioManager.STREAM_NOTIFICATION);
+                        if (notifySc != null) {
+                            if (progress > notifySc.seekbarView.getMax()) {
+                                notifySc.seekbarView.setProgress(notifySc.seekbarView.getMax());
+                            } else {
+                                notifySc.seekbarView.setProgress(progress);
+                            }
+                        }
+                    } else if (sc.streamType == AudioManager.STREAM_NOTIFICATION) {
+                        StreamControl phoneSc = mStreamControls.get(AudioManager.STREAM_RING);
+                        if (phoneSc != null) {
+                            if (progress > phoneSc.seekbarView.getMax()) {
+                                phoneSc.seekbarView.setProgress(phoneSc.seekbarView.getMax());
+                            } else {
+                                phoneSc.seekbarView.setProgress(progress);
+                            }
+                        }
+                    }
+                }
             }
         }
         resetTimeout();
@@ -969,6 +1043,12 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
     public void onClick(View v) {
         if (v == mMoreButton) {
             expand();
+        } else if (v instanceof ImageView) {
+            Intent volumeSettings = new Intent(android.provider.Settings.ACTION_SOUND_SETTINGS);
+            volumeSettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+            forceTimeout();
+            mContext.startActivity(volumeSettings);
+            return;
         }
         resetTimeout();
     }
