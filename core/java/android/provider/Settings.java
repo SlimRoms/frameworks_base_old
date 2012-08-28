@@ -805,6 +805,7 @@ public final class Settings {
             MOVED_TO_SECURE.add(Secure.LOCK_SHOW_ERROR_PATH);
             MOVED_TO_SECURE.add(Secure.LOCK_DOTS_VISIBLE);
             MOVED_TO_SECURE.add(Secure.LOCK_PATTERN_TACTILE_FEEDBACK_ENABLED);
+            MOVED_TO_SECURE.add(Secure.LOCK_PATTERN_SIZE);
             MOVED_TO_SECURE.add(Secure.LOGGING_ID);
             MOVED_TO_SECURE.add(Secure.PARENTAL_CONTROL_ENABLED);
             MOVED_TO_SECURE.add(Secure.PARENTAL_CONTROL_LAST_UPDATE);
@@ -1358,6 +1359,13 @@ public final class Settings {
         public static final String LOCK_PATTERN_TACTILE_FEEDBACK_ENABLED =
             "lock_pattern_tactile_feedback_enabled";
 
+         /**
+         * @deprecated Use {@link android.provider.Settings.Secure#LOCK_PATTERN_SIZE}
+         * instead
+         */
+        @Deprecated
+        public static final String LOCK_PATTERN_SIZE =
+            "lock_pattern_size";
 
         /**
          * A formatted string of the next alarm that is set, or the empty string
@@ -2375,12 +2383,46 @@ public final class Settings {
         public static final String WIDGET_BUTTONS_TABLET = "expanded_widget_buttons_tablet";
 
         /**
-
-         * Navigation controls to Use
+         * Navigation bar controls and buttons.
          *
          * @hide
          */
         public static final String NAV_BUTTONS = "nav_buttons";
+
+        /**
+         * Navigation bar on left side of the screen.
+         *
+         * @hide
+         */
+        public static final String NAVBAR_LEFT = "navigation_bar_left";
+
+        /**
+         * Navigation bar if menu key is enabled or disabled.
+         *
+         * @hide
+         */
+        public static final String KEY_MENU_ENABLED = "key_menu_enabled";
+
+        /**
+         * Navigation bar if back key is enabled or disabled.
+         *
+         * @hide
+         */
+        public static final String KEY_BACK_ENABLED = "key_back_enabled";
+
+        /**
+         * Navigation bar if home key is enabled or disabled.
+         *
+         * @hide
+         */
+        public static final String KEY_HOME_ENABLED = "key_home_enabled";
+
+        /**
+         * Navigation bar if visible is enabled or disabled.
+         *
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_SHOW = "navigation_bar_show";
 
         /**
         * Notification Power Widget - Custom Brightness Mode
@@ -2507,7 +2549,7 @@ public final class Settings {
 
         /**
          * Boolean value whether to link ringtone and notification volumes
-         * 
+         *
          * @hide
          */
         public static final String VOLUME_LINK_NOTIFICATION = "volume_link_notification";
@@ -2773,6 +2815,15 @@ public final class Settings {
          * @hide
          */
         public static final String UI_FORCE_OVERFLOW_BUTTON = "ui_force_overflow_button";
+
+         /**
+          * Volume keys control cursor in text fields (default is 0)
+          * 0 - Disabled
+          * 1 - Volume up/down moves cursor to left/right
+          * 2 - Volume up/down moves cursor to right/left
+          * @hide
+          */
+         public static final String VOLUME_KEY_CURSOR_CONTROL = "volume_key_cursor_control";
 
         /**
          * Show the pending notification counts as overlays on the status bar
@@ -3119,6 +3170,7 @@ public final class Settings {
             MOVED_TO_LOCK_SETTINGS.add(Secure.LOCK_SHOW_ERROR_PATH);
             MOVED_TO_LOCK_SETTINGS.add(Secure.LOCK_DOTS_VISIBLE);
             MOVED_TO_LOCK_SETTINGS.add(Secure.LOCK_PATTERN_TACTILE_FEEDBACK_ENABLED);
+            MOVED_TO_LOCK_SETTINGS.add(Secure.LOCK_PATTERN_SIZE);
             MOVED_TO_LOCK_SETTINGS.add(Secure.LOCK_BEFORE_UNLOCK);
         }
 
@@ -3602,6 +3654,12 @@ public final class Settings {
          * @hide
          */
         public static final String LOCK_SHOW_ERROR_PATH = "lock_pattern_show_error_path";
+
+        /**
+         * Size of pattern lockscreen
+         */
+        public static final String LOCK_PATTERN_SIZE = "lock_pattern_size";
+
 
         /**
          * This preference allows the device to be locked given time after screen goes off,
